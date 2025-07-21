@@ -71,7 +71,7 @@ const CustomAlertModal = ({ message, onClose }) => {
 function App() {
   // State variables for TMDB ID, movie title, error messages, loading states, and URLs
   const [tmdbId, setTmdbId] = useState(''); // Changed from movieId to tmdbId
-  const [movieTitle, setMovieTitle] = useState(''); // New state for movie title for subtitle search
+  const [videoTitle, setVideoTitle] = useState(''); // Title of the video to display
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false); // For movie loading
   const [subtitleVttUrl, setSubtitleVttUrl] = useState(null); // URL for the loaded VTT subtitle
@@ -157,10 +157,7 @@ function App() {
       if (!data.stream) throw new Error('No stream URL returned.');
 
       setStreamUrl(data.stream); // Set the stream URL
-      // If the backend returns movieName, set it for subtitle search
-      if (data.movieName) {
-        setMovieTitle(data.movieName); // Pre-fill movie title for subtitle search
-      }
+      setVideoTitle(data.movieName); // Set the video title from the response
     } catch (err) {
       console.error(err);
       setErrorMessage(err.message || 'Failed to load stream.');
@@ -242,7 +239,7 @@ function App() {
         <p className="text-slate-600 mb-6 text-base sm:text-lg">
           Load a movie by entering its TMDB ID, search for subtitles using the TMDB ID, or upload your own SRT file.
         </p>
-
+        <div className='text-slate-600 mb-2 text-xl font-semibold'>{videoTitle}</div>
         {/* TMDB ID Input and Load Button */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
           <input
@@ -262,20 +259,13 @@ function App() {
         </div>
 
         {/* Subtitle Search Input and Button (now uses tmdbId implicitly for search API) */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
-          <input
-            type="text"
-            value={movieTitle} // Still display movie title for user clarity
-            onChange={(e) => setMovieTitle(e.target.value)} // Allow manual entry if needed
-            placeholder="Movie Title (auto-filled on load, or enter for search)" // Updated placeholder
-            className="flex-grow p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
-          />
+        <div className="flex flex-col sm:flex-row-reverse items-stretch sm:items-center gap-3 mb-6">
           <button
             onClick={searchSubtitles}
             disabled={isSearchingSubtitles || isLoading || !tmdbId} // Disable if no TMDB ID
             className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-base"
           >
-            {isSearchingSubtitles ? 'Searching...' : 'Search Subtitles by TMDB ID'} {/* Updated button text */}
+            {isSearchingSubtitles ? 'Searching...' : 'Search Subtitles'} {/* Updated button text */}
           </button>
         </div>
 
