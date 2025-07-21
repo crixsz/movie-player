@@ -70,16 +70,19 @@ const CustomAlertModal = ({ message, onClose }) => {
 
 function App() {
   // State variables for TMDB ID, movie title, error messages, loading states, and URLs
-  const [tmdbId, setTmdbId] = useState(''); // Changed from movieId to tmdbId
-  const [videoTitle, setVideoTitle] = useState(''); // Title of the video to display
+  const [tmdbId, setTmdbId] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // For movie loading
-  const [subtitleVttUrl, setSubtitleVttUrl] = useState(null); // URL for the loaded VTT subtitle
-  const [streamUrl, setStreamUrl] = useState(null); // URL for the video stream
-  const [subtitleResults, setSubtitleResults] = useState([]); // Array to store subtitle search results
-  const [isSearchingSubtitles, setIsSearchingSubtitles] = useState(false); // For subtitle search loading
+  const [isLoading, setIsLoading] = useState(false);
+  const [subtitleVttUrl, setSubtitleVttUrl] = useState(null);
+  const [streamUrl, setStreamUrl] = useState(null);
+  const [subtitleResults, setSubtitleResults] = useState([]);
+  const [isSearchingSubtitles, setIsSearchingSubtitles] = useState(false);
+  const [contentType, setContentType] = useState('movie'); // State for 'movie' or 'tv'
+  const [season, setSeason] = useState(''); // New state for TV series season
+  const [episode, setEpisode] = useState(''); // New state for TV series episode
 
-  const playerRef = useRef(null); // Ref for the video player (not directly used in HlsPlayer, but kept for potential future use)
+  const playerRef = useRef(null);
 
   // Function to convert SRT subtitle format to VTT format
   const srtToVtt = (srtText) => {
@@ -137,62 +140,95 @@ function App() {
     reader.readAsText(file); // Read the uploaded file as text
   };
 
-  // Function to load a movie stream based on TMDB ID
-  const loadMovie = async () => {
-    if (!tmdbId) { // Use tmdbId
-      setErrorMessage('Please enter a TMDB ID.');
+  // Function to load content stream based on TMDB ID and content type
+  const loadContent = async () => {
+    if (!tmdbId) {
+      setErrorMessage(`Please enter a TMDB ID for the ${contentType}.`);
       return;
     }
 
-    setIsLoading(true); // Set loading state
-    setErrorMessage(''); // Clear previous errors
-    setStreamUrl(null); // Clear previous stream
-    setSubtitleVttUrl(null); // Clear previous subtitles
-    setSubtitleResults([]); // Clear previous subtitle search results
+    if (contentType === 'tv' && (!season || !episode)) {
+      setErrorMessage('Please enter both season and episode numbers for TV series.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+    setStreamUrl(null);
+    setSubtitleVttUrl(null);
+    setSubtitleResults([]);
 
     try {
-      const res = await fetch(`http://localhost:3000/play/${tmdbId}`); // Use tmdbId here
+      let res;
+      if (contentType === 'movie') {
+        res = await fetch(`http://localhost:3000/play/${tmdbId}`); // Movie API endpoint
+      } else { // contentType === 'tv'
+        res = await fetch(`http://localhost:3000/playtv/${tmdbId}/${season}/${episode}`); // TV Series API endpoint
+      }
+
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const data = await res.json();
       if (!data.stream) throw new Error('No stream URL returned.');
 
-      setStreamUrl(data.stream); // Set the stream URL
-      setVideoTitle(data.movieName); // Set the video title from the response
+      setStreamUrl(data.stream);
+      setVideoTitle(data.movieName || data.tvName); // Use appropriate name from response
     } catch (err) {
       console.error(err);
-      setErrorMessage(err.message || 'Failed to load stream.');
+      setErrorMessage(err.message || `Failed to load ${contentType} stream.`);
     } finally {
-      setIsLoading(false); // Reset loading state
+      setIsLoading(false);
     }
   };
 
-  // Function to search for subtitles using the OpenSubtitles API proxy with tmdb_id
+  // Function to search for subtitles using the OpenSubtitles API proxy
   const searchSubtitles = async () => {
-    if (!tmdbId) { // Search using tmdbId, not movieTitle
-      setErrorMessage('Please load a movie first or enter a TMDB ID to search for subtitles.');
+    if (!tmdbId) {
+      setErrorMessage(`Please load a ${contentType} first or enter a TMDB ID to search for subtitles.`);
       return;
     }
 
-    setIsSearchingSubtitles(true); // Set subtitle search loading state
-    setErrorMessage(''); // Clear previous errors
-    setSubtitleResults([]); // Clear previous results
+    setIsSearchingSubtitles(true);
+    setErrorMessage('');
+    setSubtitleResults([]);
 
     try {
-      // Call the backend proxy for OpenSubtitles search, passing tmdb_id
-      const res = await fetch(`http://localhost:3000/subtitles/search?tmdb_id=${encodeURIComponent(tmdbId)}`);
+      let res;
+      if (contentType === 'tv') {
+        // For TV, use the new /tvsubtitles/search endpoint with season and episode
+        if (!season || !episode) {
+          setErrorMessage('Please enter both season and episode numbers for TV series.');
+          setIsSearchingSubtitles(false);
+          return;
+        }
+        const params = new URLSearchParams({
+          tmdb_id: tmdbId,
+          season_id: season,
+          episode_id: episode,
+          language: 'en', // You can make this dynamic if needed
+        });
+        res = await fetch(`http://localhost:3000/tvsubtitles/search?${params.toString()}`);
+      } else {
+        // For movies, use the old endpoint
+        const params = new URLSearchParams({
+          tmdb_id: tmdbId,
+          type: contentType,
+        });
+        res = await fetch(`http://localhost:3000/subtitles/search?${params.toString()}`);
+      }
+
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const data = await res.json();
 
       if (data.data && data.data.length > 0) {
-        setSubtitleResults(data.data); // Store the subtitle results
+        setSubtitleResults(data.data);
       } else {
-        setErrorMessage('No subtitles found for this movie TMDB ID.');
+        setErrorMessage(`No subtitles found for this ${contentType} TMDB ID.`);
       }
     } catch (err) {
       console.error(err);
       setErrorMessage(err.message || 'Failed to search for subtitles.');
     } finally {
-      setIsSearchingSubtitles(false); // Reset subtitle search loading state
+      setIsSearchingSubtitles(false);
     }
   };
 
@@ -216,7 +252,7 @@ function App() {
       setSubtitleVttUrl(url); // Set the VTT URL for the video player
       setSubtitleResults([]); // Clear search results after a subtitle is loaded
     } catch (err) {
-      console.addError(err);
+      console.error(err);
       setErrorMessage(err.message || 'Failed to load subtitle from API.');
     } finally {
       setIsLoading(false); // Reset loading state
@@ -232,41 +268,116 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-800 p-4 sm:p-6 lg:p-8 flex items-center justify-center font-sans">
-      <div className="container max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-slate-200">
+      <div className="container max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-slate-200">
         <h1 className="text-3xl sm:text-4xl font-bold text-blue-700 mb-4 flex items-center">
-          Movie Player <span className="ml-2 text-4xl">🎬</span>
+          Stream Player <span className="ml-2 text-4xl">🎬</span>
         </h1>
         <p className="text-slate-600 mb-6 text-base sm:text-lg">
-          Load a movie by entering its TMDB ID, search for subtitles using the TMDB ID, or upload your own SRT file.
+          Load content by entering its TMDB ID, search for subtitles, or upload your own SRT file.
         </p>
-        <div className='text-slate-600 mb-2 text-xl font-semibold'>{videoTitle}</div>
-        {/* TMDB ID Input and Load Button */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
-          <input
-            type="text"
-            value={tmdbId} // Use tmdbId
-            onChange={(e) => setTmdbId(e.target.value)} // Set tmdbId
-            placeholder="Enter TMDB ID (e.g., 550 for Fight Club)" // Updated placeholder
-            className="flex-grow p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
-          />
+
+        {/* Content Type Selection */}
+        <div className="mb-6 flex justify-center gap-4">
           <button
-            onClick={loadMovie}
-            disabled={isLoading}
-            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+            onClick={() => {
+              setContentType('movie');
+              setTmdbId('');
+              setVideoTitle('');
+              setStreamUrl(null);
+              setSubtitleVttUrl(null);
+              setSubtitleResults([]);
+              setErrorMessage('');
+              setSeason(''); // Clear season/episode when switching
+              setEpisode('');
+            }}
+            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
+              contentType === 'movie'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            }`}
           >
-            {isLoading ? 'Loading Movie...' : 'Load Movie'}
+            Movie 🍿
+          </button>
+          <button
+            onClick={() => {
+              setContentType('tv');
+              setTmdbId('');
+              setVideoTitle('');
+              setStreamUrl(null);
+              setSubtitleVttUrl(null);
+              setSubtitleResults([]);
+              setErrorMessage('');
+              setSeason(''); // Clear season/episode when switching
+              setEpisode('');
+            }}
+            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
+              contentType === 'tv'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            }`}
+          >
+            TV Series 📺
           </button>
         </div>
 
-        {/* Subtitle Search Input and Button (now uses tmdbId implicitly for search API) */}
+        <div className='text-slate-600 mb-2 text-xl font-semibold'>{videoTitle}</div>
+
+        {/* TMDB ID Input and Load Button */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
+          <input
+            type="text"
+            value={tmdbId}
+            onChange={(e) => setTmdbId(e.target.value)}
+            placeholder={`Enter TMDB ID for ${contentType} (e.g., ${contentType === 'movie' ? '550 for Fight Club' : '1399 for Game of Thrones'})`}
+            className="flex-grow p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
+          />
+          {contentType === 'tv' && (
+            <>
+              <input
+                type="number"
+                value={season}
+                onChange={(e) => setSeason(e.target.value)}
+                placeholder="Season (e.g., 1)"
+                min="1"
+                className="w-24 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
+              />
+              <input
+                type="number"
+                value={episode}
+                onChange={(e) => setEpisode(e.target.value)}
+                placeholder="Episode (e.g., 1)"
+                min="1"
+                className="w-24 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
+              />
+            </>
+          )}
+          <button
+            onClick={loadContent}
+            disabled={isLoading || (contentType === 'tv' && (!tmdbId || !season || !episode))}
+            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+          >
+            {isLoading ? `Loading ${contentType === 'movie' ? 'Movie' : 'Episode'}...` : `Load ${contentType === 'movie' ? 'Movie' : 'Episode'}`}
+          </button>
+        </div>
+
+        {/* Subtitle Search Button and Upload */}
         <div className="flex flex-col sm:flex-row-reverse items-stretch sm:items-center gap-3 mb-6">
           <button
             onClick={searchSubtitles}
-            disabled={isSearchingSubtitles || isLoading || !tmdbId} // Disable if no TMDB ID
+            disabled={isSearchingSubtitles || isLoading || !tmdbId}
             className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-base"
           >
-            {isSearchingSubtitles ? 'Searching...' : 'Search Subtitles'} {/* Updated button text */}
+            {isSearchingSubtitles ? 'Searching...' : 'Search Subtitles'}
           </button>
+          <label className="flex-grow px-6 py-3 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 cursor-pointer text-base text-center">
+            Upload .srt File
+            <input
+              type="file"
+              accept=".srt"
+              onChange={handleSubtitleUpload}
+              className="hidden"
+            />
+          </label>
         </div>
 
         {/* Subtitle Search Results Display */}
@@ -275,14 +386,14 @@ function App() {
             <h3 className="text-lg font-semibold text-slate-700 mb-3">Found Subtitles:</h3>
             <ul className="space-y-2">
               {subtitleResults.map((sub) => (
-                <li key={sub.id} className="flex justify-between items-center p-2 bg-white rounded-md shadow-sm border border-slate-200"> {/* Use sub.id as key */}
+                <li key={sub.id} className="flex justify-between items-center p-2 bg-white rounded-md shadow-sm border border-slate-200">
                   <span className="text-slate-700 text-sm flex-grow mr-4">
-                    <span className="font-medium">{sub.attributes.language}</span> - {sub.attributes.movie_name || sub.attributes.title} {/* Access attributes */}
-                    {sub.attributes.release && <span className="text-slate-500 ml-2 text-xs">({sub.attributes.release})</span>} {/* Access attributes */}
+                    <span className="font-medium">{sub.attributes.language}</span> - {sub.attributes.movie_name || sub.attributes.title || 'N/A'}
+                    {sub.attributes.release && <span className="text-slate-500 ml-2 text-xs"> ({sub.attributes.release})</span>}
                   </span>
                   <button
                     onClick={() => loadSubtitleFromApi(sub.attributes.files?.[0]?.file_id)}
-                    disabled={isLoading} // Disable while any loading is active
+                    disabled={isLoading}
                     className="ml-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-800 transition-colors duration-200 disabled:opacity-50"
                   >
                     Load
@@ -292,9 +403,9 @@ function App() {
             </ul>
           </div>
         )}
+
         {/* Video Player Section */}
-        {//streamUrl && 
-        (
+        {(
           <div className="w-full bg-black rounded-lg overflow-hidden shadow-md aspect-video">
             <HlsPlayer src={streamUrl} subtitles={subtitleVttUrl} />
           </div>
