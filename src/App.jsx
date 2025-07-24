@@ -161,9 +161,9 @@ function App() {
     try {
       let res;
       if (contentType === 'movie') {
-        res = await fetch(`http://localhost:3000/play/${tmdbId}`); // Movie API endpoint
+        res = await fetch(`http://aws.pikai.me/play/${tmdbId}`); // Movie API endpoint
       } else { // contentType === 'tv'
-        res = await fetch(`http://localhost:3000/playtv/${tmdbId}/${season}/${episode}`); // TV Series API endpoint
+        res = await fetch(`http://aws.pikai.me/playtv/${tmdbId}/${season}/${episode}`); // TV Series API endpoint
       }
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -206,14 +206,14 @@ function App() {
           episode_id: episode,
           language: 'en', // You can make this dynamic if needed
         });
-        res = await fetch(`http://localhost:3000/tvsubtitles/search?${params.toString()}`);
+        res = await fetch(`http://aws.pikai.me/tvsubtitles/search?${params.toString()}`);
       } else {
         // For movies, use the old endpoint
         const params = new URLSearchParams({
           tmdb_id: tmdbId,
           type: contentType,
         });
-        res = await fetch(`http://localhost:3000/subtitles/search?${params.toString()}`);
+        res = await fetch(`http://aws.pikai.me/subtitles/search?${params.toString()}`);
       }
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -240,7 +240,7 @@ function App() {
 
     try {
       // Call the backend proxy to download the subtitle
-      const res = await fetch(`http://localhost:3000/subtitles/download/${fileId}`);
+      const res = await fetch(`http://aws.pikai.me/subtitles/download/${fileId}`);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const srtText = await res.text(); // Get the SRT content
 
