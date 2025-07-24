@@ -240,7 +240,7 @@ function App() {
 
     try {
       // Call the backend proxy to download the subtitle
-      const res = await fetch(`http://aws.pikai.me:3000:3000/subtitles/download/${fileId}`);
+      const res = await fetch(`http://aws.pikai.me:3000/subtitles/download/${fileId}`);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const srtText = await res.text(); // Get the SRT content
 
