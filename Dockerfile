@@ -4,7 +4,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
 COPY . .
 
@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=build /app/dist ./dist
 
 # Install serve globally
-RUN pnpm install -g serve
+RUN npm install -g serve
 
 # Expose the port 8118
 EXPOSE 8118
