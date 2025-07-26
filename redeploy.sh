@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the app name
-APP_NAME="link-grabber-app"
+APP_NAME="movie-player"
 
 # Stop and remove the existing container
 echo "Stopping and removing existing container..."
