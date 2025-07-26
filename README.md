@@ -1,24 +1,68 @@
-# React + Vite
+# Stream Player
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple web application for streaming movies and TV shows using a TMDB ID. This application supports HLS streaming, subtitle search from OpenSubtitles, and local subtitle file uploads.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Stream Content:** Play movies and TV shows by providing their TMDB ID.
+- **HLS Streaming:** Utilizes HLS.js for adaptive bitrate streaming.
+- **Subtitle Support:**
+  - Search for subtitles from OpenSubtitles.
+  - Load subtitles directly from the OpenSubtitles API.
+  - Upload and display local SRT subtitle files.
+- **Responsive Design:** Built with Tailwind CSS for a responsive user experience.
 
-# Step 1: Clone this repo
-```
-git clone https://github.com/crixsz/react-template-jsx-tailwindcss-vite
-```
+## Tech Stack
 
-# Step 2: Remove the original git of this repo by deleting .git
+- **Frontend:**
+  - React
+  - Vite
+  - Tailwind CSS
+  - HLS.js
+- **Deployment:**
+  - Docker
 
-# Step 3: Reinit the git
-```
-git init
-```
-# Step 4: Install the packages
-```
-pnpm install
+## Getting Started
+
+To run this project in a development environment, follow these steps:
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
+
+3. **Run the development server:**
+   ```bash
+   pnpm run dev
+   ```
+
+The application will be available at `http://localhost:5173` (or another port if 5173 is in use).
+
+## Deployment
+
+This project can be deployed using Docker.
+
+1. **Build the Docker image:**
+   ```bash
+   docker build -t movie-player .
+   ```
+
+2. **Run the Docker container:**
+   ```bash
+   docker run -d -p 8118:8118 --name movie-player movie-player
+   ```
+
+   The application will be accessible at `http://localhost:8118`.
+
+### Redeployment
+
+A `redeploy.sh` script is provided to simplify the process of stopping, removing, rebuilding, and redeploying the Docker container.
+
+```bash
+./redeploy.sh
 ```
