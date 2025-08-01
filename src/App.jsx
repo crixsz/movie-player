@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import './App.css'; // Assuming you have some basic CSS in App.css
 import Hls from 'hls.js'; // HLS.js for playing HLS streams
+import VideoPlayer from './VideoPlayer'
 
 // HlsPlayer component to handle video playback with HLS.js and subtitles
 const HlsPlayer = ({ src, subtitles }) => {
@@ -161,9 +162,9 @@ function App() {
     try {
       let res;
       if (contentType === 'movie') {
-        res = await fetch(`http://aws.pikai.me:3000/play/${tmdbId}`); // Movie API endpoint
+        res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/play/${tmdbId}`); // Movie API endpoint
       } else { // contentType === 'tv'
-        res = await fetch(`http://aws.pikai.me:3000/playtv/${tmdbId}/${season}/${episode}`); // TV Series API endpoint
+        res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/playtv/${tmdbId}/${season}/${episode}`); // TV Series API endpoint
       }
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -206,14 +207,14 @@ function App() {
           episode_id: episode,
           language: 'en', // You can make this dynamic if needed
         });
-        res = await fetch(`http://aws.pikai.me:3000/tvsubtitles/search?${params.toString()}`);
+        res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/tvsubtitles/search?${params.toString()}`);
       } else {
         // For movies, use the old endpoint
         const params = new URLSearchParams({
           tmdb_id: tmdbId,
           type: contentType,
         });
-        res = await fetch(`http://aws.pikai.me:3000/subtitles/search?${params.toString()}`);
+        res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/subtitles/search?${params.toString()}`);
       }
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -240,7 +241,7 @@ function App() {
 
     try {
       // Call the backend proxy to download the subtitle
-      const res = await fetch(`http://aws.pikai.me:3000/subtitles/download/${fileId}`);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/subtitles/download/${fileId}`);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const srtText = await res.text(); // Get the SRT content
 
@@ -407,7 +408,7 @@ function App() {
         {/* Video Player Section */}
         {(
           <div className="w-full bg-black rounded-lg overflow-hidden shadow-md aspect-video">
-            <HlsPlayer src={streamUrl} subtitles={subtitleVttUrl} />
+            <VideoPlayer src={streamUrl} subtitles={subtitleVttUrl} />
           </div>
         )}
       </div>
