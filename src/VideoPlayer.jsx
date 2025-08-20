@@ -289,28 +289,26 @@ const VideoPlayer = ({ src, subtitles }) => {
           <div className="h-full bg-red-600 rounded-full" style={{ width: `${progress}%` }}></div>
           <div className="absolute top-1/3 -mt-1 h-3 w-3 rounded-full bg-red-800" style={{ left: `calc(${progress}% - 6px)` }}></div>
         </div>
-        <div className="flex items-center justify-between text-white mt-2">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between text-white mt-2 h-7">
+          <div className="flex items-center gap-2">
             {/* Play/Pause Button */}
             <button onClick={togglePlayPause} className="focus:outline-none">
               {isPlaying ? <PauseIcon /> : <PlayIcon />}
             </button>
             {/* Volume Control */}
-            <div className="flex items-center gap-2 group/volume">
+            <div className="flex items-center gap-2">
               <button onClick={toggleMute} className="focus:outline-none">
                 {isMuted || volume === 0 ? <VolumeOffIcon /> : <VolumeHighIcon />}
               </button>
-              <div className="top-1/3w-0 group-hover/volume:w-24 transition-all duration-300">
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className=" w-24 h-1.5 bg-gray-500/50 rounded-full appearance-none cursor-pointer accent-red-600"
-                />
-              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="w-24 h-1.5 bg-gray-500/50 rounded-full appearance-none cursor-pointer accent-red-600"
+              />
             </div>
           </div>
           {/* Time Display and Fullscreen button */}
