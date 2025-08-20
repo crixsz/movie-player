@@ -313,7 +313,7 @@ const VideoPlayer = ({ src, subtitles }) => {
           </div>
           {/* Time Display and Fullscreen button */}
           <div className="flex items-center gap-4">
-            <span>{formatTime(currentTime)}</span> / <span>{formatTime(duration)}</span>
+            <div className="font-semibold text-m"><span>{formatTime(currentTime)}</span> / <span>{formatTime(duration)}</span></div>
             <button onClick={toggleFullscreen} className="focus:outline-none">
                 {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
             </button>
