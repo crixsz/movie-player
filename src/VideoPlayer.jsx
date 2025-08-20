@@ -245,7 +245,7 @@ const VideoPlayer = ({ src, subtitles }) => {
   if (!src) {
     return (
       <div className="w-full h-auto aspect-video rounded-lg bg-black flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-red-600"></div>
+          <h1 className="text-white font-semibold">No sources selected</h1>
       </div>
     );
   }
