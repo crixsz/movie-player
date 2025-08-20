@@ -1,1 +1,33 @@
+/* For Webkit browsers (Chrome, Safari, Edge) */
+.volume-range::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default appearance */
+  width: 12px;
+  height: 12px;
+  background: #b91c1c; /* red-800 */
+  border-radius: 9999px; /* Full rounded */
+  cursor: pointer;
+  margin-top: -3px; /* Adjust to vertically center the thumb on the track */
+}
 
+/* For Firefox */
+.volume-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #b91c1c; /* red-800 */
+  border-radius: 9999px; /* Full rounded */
+  cursor: pointer;
+}
+
+/* For Webkit browsers (Chrome, Safari, Edge) */
+.volume-range::-webkit-slider-runnable-track {
+  height: 6px; /* Match progress bar track height */
+  background: rgba(107, 114, 128, 0.5); /* gray-500/50 */
+  border-radius: 9999px;
+}
+
+/* For Firefox */
+.volume-range::-moz-range-track {
+  height: 6px; /* Match progress bar track height */
+  background: rgba(107, 114, 128, 0.5); /* gray-500/50 */
+  border-radius: 9999px;
+}

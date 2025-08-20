@@ -307,7 +307,7 @@ const VideoPlayer = ({ src, subtitles }) => {
                 step="0.05"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-24 h-1.5 bg-gray-500/50 rounded-full appearance-none cursor-pointer accent-red-600"
+                className="w-24 h-1.5 bg-gray-500/50 rounded-full appearance-none cursor-pointer accent-red-600 volume-range"
               />
             </div>
           </div>
