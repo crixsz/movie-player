@@ -6,6 +6,7 @@ const VideoPlayer = ({ src, subtitles }) => {
   const playerContainerRef = useRef(null);
   const progressBarRef = useRef(null);
   const wasPlayingRef = useRef(false);
+  const trackElRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
@@ -17,6 +18,19 @@ const VideoPlayer = ({ src, subtitles }) => {
   const [isControlsVisible, setIsControlsVisible] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const controlsTimeoutRef = useRef(null);
+
+  // Subtitle state
+  const [currentSubtitle, setCurrentSubtitle] = useState("");
+  const [subtitleBottomPx, setSubtitleBottomPx] = useState(() => {
+    try {
+      const saved = localStorage.getItem("subtitleBottomPx");
+      return saved ? parseInt(saved, 10) : 80;
+    } catch {
+      return 80;
+    }
+  });
+  const [isDraggingSubtitle, setIsDraggingSubtitle] = useState(false);
+  const dragStartRef = useRef({ startY: 0, startBottom: 80 });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -70,6 +84,60 @@ const VideoPlayer = ({ src, subtitles }) => {
     };
   }, [src]);
 
+  // Initialize and manage text track for custom subtitle rendering
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Hide native cues for all tracks and keep them loaded
+    for (let i = 0; i < video.textTracks.length; i++) {
+      video.textTracks[i].mode = "hidden";
+    }
+
+    const track = video.textTracks && video.textTracks[0];
+    if (!track) {
+      setCurrentSubtitle("");
+      return;
+    }
+
+    const updateFromActiveCues = () => {
+      if (track.activeCues && track.activeCues.length > 0) {
+        // Join multiple active cues if any
+        const html = Array.from(track.activeCues)
+          .map((c) => (c.text || "").replace(/\n/g, "<br/>") )
+          .join("<br/>");
+        setCurrentSubtitle(html);
+      } else {
+        setCurrentSubtitle("");
+      }
+    };
+
+    // Ensure cues are loaded; listen to cuechange for updates
+    track.mode = "hidden";
+    track.addEventListener("cuechange", updateFromActiveCues);
+
+    // Also bind to timeupdate to be extra robust across browsers
+    const handleTimeUpdate = () => updateFromActiveCues();
+    video.addEventListener("timeupdate", handleTimeUpdate);
+
+    // Kick once in case cues already active
+    updateFromActiveCues();
+
+    return () => {
+      track.removeEventListener("cuechange", updateFromActiveCues);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+  }, [subtitles]);
+
+  // Ensure the <track> element's underlying TextTrack is hidden so native captions don't show
+  useEffect(() => {
+    const el = trackElRef.current;
+    if (!el || !el.track) return;
+    try {
+      el.track.mode = "hidden";
+    } catch {}
+  }, [subtitles]);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -88,6 +156,71 @@ const VideoPlayer = ({ src, subtitles }) => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
     };
   }, [isSeeking]);
+
+  // Drag handlers for subtitle vertical position
+  const onSubtitleMouseDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingSubtitle(true);
+    dragStartRef.current = { startY: e.clientY, startBottom: subtitleBottomPx };
+  };
+  const onSubtitleTouchStart = (e) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    e.stopPropagation();
+    setIsDraggingSubtitle(true);
+    dragStartRef.current = { startY: touch.clientY, startBottom: subtitleBottomPx };
+  };
+  useEffect(() => {
+    const move = (clientY) => {
+      const container = playerContainerRef.current;
+      if (!container) return;
+      const delta = clientY - dragStartRef.current.startY; // +down, -up
+      // Moving up increases bottom value (since bottom is distance from container bottom)
+      let next = dragStartRef.current.startBottom - delta;
+      const maxBottom = Math.max(0, container.clientHeight - 24); // keep inside
+      if (next < 0) next = 0;
+      if (next > maxBottom) next = maxBottom;
+      setSubtitleBottomPx(next);
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDraggingSubtitle) return;
+      e.preventDefault();
+      move(e.clientY);
+    };
+    const onMouseUp = () => {
+      if (!isDraggingSubtitle) return;
+      setIsDraggingSubtitle(false);
+      try { localStorage.setItem("subtitleBottomPx", String(subtitleBottomPx)); } catch {}
+    };
+    const onTouchMove = (e) => {
+      if (!isDraggingSubtitle) return;
+      const t = e.touches[0];
+      if (!t) return;
+      move(t.clientY);
+    };
+    const onTouchEnd = () => {
+      if (!isDraggingSubtitle) return;
+      setIsDraggingSubtitle(false);
+      try { localStorage.setItem("subtitleBottomPx", String(subtitleBottomPx)); } catch {}
+    };
+
+    if (isDraggingSubtitle) {
+      window.addEventListener("mousemove", onMouseMove, { passive: false });
+      window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("touchend", onTouchEnd);
+      window.addEventListener("touchcancel", onTouchEnd);
+    }
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [isDraggingSubtitle, subtitleBottomPx]);
 
   const togglePlayPause = () => {
     if (videoRef.current.paused) {
@@ -288,11 +421,11 @@ const VideoPlayer = ({ src, subtitles }) => {
       >
         {subtitles && (
           <track
+            ref={trackElRef}
             kind="subtitles"
             srcLang="en"
             label="English"
             src={subtitles}
-            default
           />
         )}
       </video>
@@ -303,15 +436,27 @@ const VideoPlayer = ({ src, subtitles }) => {
             position: "absolute",
             left: 0,
             right: 0,
-            bottom: "80px", // move higher above bottom
+            bottom: `${subtitleBottomPx}px`,
             width: "100%",
             textAlign: "center",
-            pointerEvents: "none",
             zIndex: 30,
+            pointerEvents: "none",
           }}
-          className="subtitle-overlay text-white text-2xl font-semibold drop-shadow-lg px-2"
         >
-          {/* Render current subtitle here if using custom subtitle rendering */}
+          <div
+            onMouseDown={onSubtitleMouseDown}
+            onTouchStart={onSubtitleTouchStart}
+            onClick={(e) => e.stopPropagation()}
+            className={`inline-block max-w-[95%] text-white text-2xl font-semibold px-3 py-1 rounded-md`}
+            style={{
+              background: currentSubtitle ? "rgba(0,0,0,0.35)" : "transparent",
+              textShadow: "0 2px 4px rgba(0,0,0,0.9)",
+              pointerEvents: "auto",
+              cursor: isDraggingSubtitle ? "grabbing" : "grab",
+              userSelect: "none",
+            }}
+            dangerouslySetInnerHTML={{ __html: currentSubtitle }}
+          />
         </div>
       )}
       <div
