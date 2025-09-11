@@ -1,0 +1,52 @@
+# Backend Dockerfile
+FROM node:18-alpine
+
+# Install necessary system dependencies for Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    && rm -rf /var/cache/apk/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy backend source code
+COPY src/backend/ ./src/backend/
+
+# Modify backend server to bind to all interfaces (0.0.0.0)
+RUN sed -i 's/app.listen(PORT, () => {/app.listen(PORT, "0.0.0.0", () => {/' src/backend/server.js
+
+# Set environment variables for Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Create a non-root user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S movieplayer -u 1001
+
+# Change ownership of the app directory
+RUN chown -R movieplayer:nodejs /app
+USER movieplayer
+
+# Expose backend port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "const http=require('http');http.get('http://localhost:3000',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+
+# Start the backend server
+CMD ["node", "src/backend/server.js"]

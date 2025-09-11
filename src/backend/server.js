@@ -12,6 +12,7 @@ const tmdb_id = process.env.TMDB_API_KEY;
 const opensubtitles_api_key = process.env.OPENSUBTITLES_API_KEY;
 let TARGET;
 const VITE_BACKEND_URL = process.env.VITE_BACKEND_URL;
+const BACKEND_HOST = new URL(VITE_BACKEND_URL).host;
 
 // CORS Middleware
 app.use((req, res, next) => {
@@ -222,8 +223,7 @@ app.get("/play/:id", async (req, res) => {
   }
 
   // Replace origin with proxy
-  const backendUrl = `localhost:${PORT}`;
-  const proxied = bestStream.replace(TARGET, `http://${backendUrl}/proxy`);
+  const proxied = bestStream.replace(TARGET, `http://${BACKEND_HOST}/proxy`);
   res.json({ stream: proxied, movieName: movieName });
 });
 
@@ -245,8 +245,7 @@ app.get("/playtv/:id/:seasonId/:episodeId", async (req, res) => {
   }
 
   // Replace origin with proxy
-  const backendUrl = `localhost:${PORT}`;
-  const proxied = bestStreamTV.replace(TARGET, `http://${backendUrl}/proxy`);
+  const proxied = bestStreamTV.replace(TARGET, `http://${BACKEND_HOST}/proxy`);
   res.json({ stream: proxied, tvName: tvName });
 });
 
@@ -306,10 +305,9 @@ class HLSRewriter extends Transform {
 
     let rewritten = processedData;
     if (segmentOrigin) {
-      const backendUrl = `localhost:${PORT}`;
       rewritten = processedData.replace(
         new RegExp(segmentOrigin.replace(/\./g, "\\."), "g"),
-        `http://${backendUrl}/proxy`
+        `http://${BACKEND_HOST}/proxy`
       );
     }
     this.push(rewritten);
