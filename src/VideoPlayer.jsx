@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
-import Hls from 'hls.js';
+import React, { useRef, useState, useEffect } from "react";
+import Hls from "hls.js";
 
 const VideoPlayer = ({ src, subtitles }) => {
   const videoRef = useRef(null);
@@ -25,44 +25,48 @@ const VideoPlayer = ({ src, subtitles }) => {
     let hls;
 
     if (src) {
-        if (Hls.isSupported()) {
-            hls = new Hls();
-            hls.loadSource(src);
-            hls.attachMedia(video);
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = src;
-        }
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = src;
+      }
     }
 
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleLoadedMetadata = () => setDuration(video.duration);
     const handleVolumeChange = () => {
-        setVolume(video.volume);
-        setIsMuted(video.muted);
+      setVolume(video.volume);
+      setIsMuted(video.muted);
     };
     const handleFullscreenChange = () => {
-        const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
-        setIsFullscreen(!!fullscreenElement);
+      const fullscreenElement =
+        document.fullscreenElement || document.webkitFullscreenElement;
+      setIsFullscreen(!!fullscreenElement);
     };
 
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('volumechange', handleVolumeChange);
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("volumechange", handleVolumeChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
 
     return () => {
       if (hls) {
         hls.destroy();
       }
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      video.removeEventListener('volumechange', handleVolumeChange);
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("volumechange", handleVolumeChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+      );
     };
   }, [src]);
 
@@ -78,10 +82,10 @@ const VideoPlayer = ({ src, subtitles }) => {
       setCurrentTime(video.currentTime);
     };
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener("timeupdate", handleTimeUpdate);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
     };
   }, [isSeeking]);
 
@@ -97,7 +101,7 @@ const VideoPlayer = ({ src, subtitles }) => {
     e.preventDefault();
     wasPlayingRef.current = !videoRef.current.paused;
     if (wasPlayingRef.current) {
-        videoRef.current.pause();
+      videoRef.current.pause();
     }
     setIsSeeking(true);
 
@@ -114,39 +118,39 @@ const VideoPlayer = ({ src, subtitles }) => {
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-        if (!isSeeking || !progressBarRef.current) return;
-        e.preventDefault();
-        const progressBar = progressBarRef.current;
-        const rect = progressBar.getBoundingClientRect();
-        let offsetX = e.clientX - rect.left;
+      if (!isSeeking || !progressBarRef.current) return;
+      e.preventDefault();
+      const progressBar = progressBarRef.current;
+      const rect = progressBar.getBoundingClientRect();
+      let offsetX = e.clientX - rect.left;
 
-        if (offsetX < 0) offsetX = 0;
-        if (offsetX > progressBar.offsetWidth) offsetX = progressBar.offsetWidth;
+      if (offsetX < 0) offsetX = 0;
+      if (offsetX > progressBar.offsetWidth) offsetX = progressBar.offsetWidth;
 
-        const newTime = (offsetX / progressBar.offsetWidth) * duration;
-        videoRef.current.currentTime = newTime;
-        setProgress((newTime / duration) * 100);
-        setCurrentTime(newTime);
+      const newTime = (offsetX / progressBar.offsetWidth) * duration;
+      videoRef.current.currentTime = newTime;
+      setProgress((newTime / duration) * 100);
+      setCurrentTime(newTime);
     };
 
     const handleMouseUp = (e) => {
-        e.preventDefault();
-        if (isSeeking) {
-            if (wasPlayingRef.current) {
-                videoRef.current.play();
-            }
-            setIsSeeking(false);
+      e.preventDefault();
+      if (isSeeking) {
+        if (wasPlayingRef.current) {
+          videoRef.current.play();
         }
+        setIsSeeking(false);
+      }
     };
 
     if (isSeeking) {
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
     }
 
     return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isSeeking, duration]);
 
@@ -155,8 +159,8 @@ const VideoPlayer = ({ src, subtitles }) => {
     videoRef.current.volume = newVolume;
     setVolume(newVolume);
     if (newVolume > 0) {
-        videoRef.current.muted = false;
-        setIsMuted(false);
+      videoRef.current.muted = false;
+      setIsMuted(false);
     }
   };
 
@@ -167,96 +171,114 @@ const VideoPlayer = ({ src, subtitles }) => {
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-        playerContainerRef.current.requestFullscreen().catch(err => {
-            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-        });
+      playerContainerRef.current.requestFullscreen().catch((err) => {
+        alert(
+          `Error attempting to enable full-screen mode: ${err.message} (${err.name})`
+        );
+      });
     } else {
-        document.exitFullscreen();
+      document.exitFullscreen();
     }
   };
 
   const formatTime = (timeInSeconds) => {
     if (isNaN(timeInSeconds) || timeInSeconds < 0) {
-        return '00:00:00';
+      return "00:00:00";
     }
     const hours = Math.floor(timeInSeconds / 3600);
     const minutes = Math.floor((timeInSeconds % 3600) / 60);
     const seconds = Math.floor(timeInSeconds % 60);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
   };
 
   const handleMouseEnter = () => {
     if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
+      clearTimeout(controlsTimeoutRef.current);
     }
     setIsControlsVisible(true);
   };
 
   const handleMouseLeave = () => {
     if (isPlaying) {
-        controlsTimeoutRef.current = setTimeout(() => {
-            setIsControlsVisible(false);
-        }, 2000);
+      controlsTimeoutRef.current = setTimeout(() => {
+        setIsControlsVisible(false);
+      }, 2000);
     }
   };
-  
+
   useEffect(() => {
     if (!isPlaying) {
-        setIsControlsVisible(true);
-        if (controlsTimeoutRef.current) {
-            clearTimeout(controlsTimeoutRef.current);
-        }
+      setIsControlsVisible(true);
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
     } else {
-        controlsTimeoutRef.current = setTimeout(() => {
-            setIsControlsVisible(false);
-        }, 2000);
+      controlsTimeoutRef.current = setTimeout(() => {
+        setIsControlsVisible(false);
+      }, 2000);
     }
     return () => {
-        if (controlsTimeoutRef.current) {
-            clearTimeout(controlsTimeoutRef.current);
-        }
-    }
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
   }, [isPlaying]);
-
 
   // Icons as SVG components
   const PlayIcon = () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
+    </svg>
   );
   const PauseIcon = () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+    </svg>
   );
   const VolumeHighIcon = () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.28 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" /></svg>
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.28 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+    </svg>
   );
   const VolumeOffIcon = () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" /></svg>
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+    </svg>
   );
   const BigPlayIcon = () => (
-    <svg className="w-16 h-16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+    <svg className="w-16 h-16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
+    </svg>
   );
   const FullscreenEnterIcon = () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+    </svg>
   );
   const FullscreenExitIcon = () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+    </svg>
   );
 
   if (!src) {
     return (
       <div className="w-full h-auto aspect-video rounded-lg bg-black flex items-center justify-center">
-          <h1 className="text-white font-semibold">No sources selected</h1>
+        <h1 className="text-white font-semibold">No sources selected</h1>
       </div>
     );
   }
 
   return (
-    <div 
-        ref={playerContainerRef}
-        className="relative"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onMouseMove={handleMouseEnter}
+    <div
+      ref={playerContainerRef}
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseEnter}
     >
       <video
         ref={videoRef}
@@ -274,20 +296,53 @@ const VideoPlayer = ({ src, subtitles }) => {
           />
         )}
       </video>
-      <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${!isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={togglePlayPause}>
+      {/* Subtitle overlay for custom positioning */}
+      {subtitles && (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: "80px", // move higher above bottom
+            width: "100%",
+            textAlign: "center",
+            pointerEvents: "none",
+            zIndex: 30,
+          }}
+          className="subtitle-overlay text-white text-2xl font-semibold drop-shadow-lg px-2"
+        >
+          {/* Render current subtitle here if using custom subtitle rendering */}
+        </div>
+      )}
+      <div
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+          !isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={togglePlayPause}
+      >
         <button className="text-white bg-black bg-opacity-50 rounded-full p-4 focus:outline-none">
           <BigPlayIcon />
         </button>
       </div>
-      <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 transition-opacity duration-300 ${isControlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 transition-opacity duration-300 ${
+          isControlsVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
         {/* Progress Bar */}
-        <div 
+        <div
           ref={progressBarRef}
-          className="relative h-1.5 w-full bg-gray-500/50 rounded-full cursor-pointer" 
+          className="relative h-1.5 w-full bg-gray-500/50 rounded-full cursor-pointer"
           onMouseDown={handleSeekMouseDown}
         >
-          <div className="h-full bg-red-600 rounded-full" style={{ width: `${progress}%` }}></div>
-          <div className="absolute top-1/3 -mt-1 h-3 w-3 rounded-full bg-red-800" style={{ left: `calc(${progress}% - 6px)` }}></div>
+          <div
+            className="h-full bg-red-600 rounded-full"
+            style={{ width: `${progress}%` }}
+          ></div>
+          <div
+            className="absolute top-1/3 -mt-1 h-3 w-3 rounded-full bg-red-800"
+            style={{ left: `calc(${progress}% - 6px)` }}
+          ></div>
         </div>
         <div className="flex items-center justify-between text-white mt-2 h-7">
           <div className="flex items-center gap-2">
@@ -298,7 +353,11 @@ const VideoPlayer = ({ src, subtitles }) => {
             {/* Volume Control */}
             <div className="flex items-center gap-2">
               <button onClick={toggleMute} className="focus:outline-none">
-                {isMuted || volume === 0 ? <VolumeOffIcon /> : <VolumeHighIcon />}
+                {isMuted || volume === 0 ? (
+                  <VolumeOffIcon />
+                ) : (
+                  <VolumeHighIcon />
+                )}
               </button>
               <input
                 type="range"
@@ -313,9 +372,12 @@ const VideoPlayer = ({ src, subtitles }) => {
           </div>
           {/* Time Display and Fullscreen button */}
           <div className="flex items-center gap-4">
-            <div className="font-semibold text-m"><span>{formatTime(currentTime)}</span> / <span>{formatTime(duration)}</span></div>
+            <div className="font-semibold text-m">
+              <span>{formatTime(currentTime)}</span> /{" "}
+              <span>{formatTime(duration)}</span>
+            </div>
             <button onClick={toggleFullscreen} className="focus:outline-none">
-                {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
             </button>
           </div>
         </div>
