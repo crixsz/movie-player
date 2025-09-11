@@ -327,33 +327,38 @@ const VideoPlayer = ({ src, subtitles }) => {
     )}:${String(seconds).padStart(2, "0")}`;
   };
 
-  const handleMouseEnter = () => {
+  // Unified auto-hide controls handler based on user inactivity
+  const resetControlsAutoHide = () => {
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
     setIsControlsVisible(true);
+    if (!isPlaying) return; // keep visible when paused
+    controlsTimeoutRef.current = setTimeout(() => {
+      setIsControlsVisible(false);
+    }, 2000);
   };
 
-  const handleMouseLeave = () => {
-    if (isPlaying) {
-      controlsTimeoutRef.current = setTimeout(() => {
-        setIsControlsVisible(false);
-      }, 1500);
-    }
-  };
-
+  // Attach activity listeners and manage auto-hide in fullscreen or windowed
   useEffect(() => {
-    if (!isPlaying) {
-      setIsControlsVisible(true);
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
-      }
-    } else {
-      controlsTimeoutRef.current = setTimeout(() => {
-        setIsControlsVisible(false);
-      }, 2000);
-    }
+    const node = playerContainerRef.current;
+    if (!node) return;
+
+    const onMove = () => resetControlsAutoHide();
+    const onTouch = () => resetControlsAutoHide();
+    const onKey = () => resetControlsAutoHide();
+
+    node.addEventListener("mousemove", onMove);
+    node.addEventListener("touchstart", onTouch, { passive: true });
+    window.addEventListener("keydown", onKey);
+
+    // Kick once on state change
+    resetControlsAutoHide();
+
     return () => {
+      node.removeEventListener("mousemove", onMove);
+      node.removeEventListener("touchstart", onTouch);
+      window.removeEventListener("keydown", onKey);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
@@ -408,10 +413,7 @@ const VideoPlayer = ({ src, subtitles }) => {
   return (
     <div
       ref={playerContainerRef}
-      className="relative"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseEnter}
+      className={`relative ${isControlsVisible ? "" : "cursor-none"}`}
     >
       <video
         ref={videoRef}
