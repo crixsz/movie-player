@@ -8,6 +8,8 @@ dotenv.config();
 
 const app = express();
 const PORT = 3000;
+const tmdb_id = process.env.TMDB_API_KEY;
+const opensubtitles_api_key = process.env.OPENSUBTITLES_API_KEY;
 let TARGET;
 const VITE_BACKEND_URL = process.env.VITE_BACKEND_URL;
 
@@ -371,9 +373,8 @@ app.options("/proxy/*", (req, res) => {
 // NEW ENDPOINT: Search for subtitles using OpenSubtitles API with tmdb_id
 app.get("/subtitles/search", async (req, res) => {
   const { tmdb_id, language } = req.query; // tmdb_id and optional language (e.g., 'en')
-  const openSubtitlesApiKey = process.env.OPENSUBTITLES_API_KEY;
 
-  if (!openSubtitlesApiKey) {
+  if (!opensubtitles_api_key) {
     return res
       .status(500)
       .json({ error: "OpenSubtitles API key not configured in .env" });
@@ -397,7 +398,7 @@ app.get("/subtitles/search", async (req, res) => {
   try {
     const osRes = await fetch(searchUrl.toString(), {
       headers: {
-        "Api-Key": openSubtitlesApiKey,
+        "Api-Key": opensubtitles_api_key,
         "User-Agent": "x3n0nzox", // Required by OpenSubtitles API
       },
     });
@@ -441,9 +442,8 @@ app.get("/subtitles/search", async (req, res) => {
 // NEW ENDPOINT: Search for subtitles using OpenSubtitles API with tmdb_id, season_id and episode_id
 app.get("/tvsubtitles/search", async (req, res) => {
   const { tmdb_id, season_id, episode_id, language } = req.query; // tmdb_id, season_id, episode_id and optional language (e.g., 'en')
-  const openSubtitlesApiKey = process.env.OPENSUBTITLES_API_KEY;
 
-  if (!openSubtitlesApiKey) {
+  if (!opensubtitles_api_key) {
     return res
       .status(500)
       .json({ error: "OpenSubtitles API key not configured in .env" });
@@ -469,7 +469,7 @@ app.get("/tvsubtitles/search", async (req, res) => {
   try {
     const osRes = await fetch(searchUrl.toString(), {
       headers: {
-        "Api-Key": openSubtitlesApiKey,
+        "Api-Key": opensubtitles_api_key,
         "User-Agent": "x3n0nzox", // Required by OpenSubtitles API
       },
     });
@@ -513,9 +513,8 @@ app.get("/tvsubtitles/search", async (req, res) => {
 // NEW ENDPOINT: Download a specific subtitle file from OpenSubtitles
 app.get("/subtitles/download/:fileId", async (req, res) => {
   const { fileId } = req.params;
-  const openSubtitlesApiKey = process.env.OPENSUBTITLES_API_KEY;
 
-  if (!openSubtitlesApiKey) {
+  if (!opensubtitles_api_key) {
     return res
       .status(500)
       .json({ error: "OpenSubtitles API key not configured in .env" });
@@ -527,7 +526,7 @@ app.get("/subtitles/download/:fileId", async (req, res) => {
     const osRes = await fetch(downloadUrl, {
       method: "POST",
       headers: {
-        "Api-Key": openSubtitlesApiKey,
+        "Api-Key": opensubtitles_api_key,
         "User-Agent": "x3n0nzox",
         "Content-Type": "application/json",
       },
