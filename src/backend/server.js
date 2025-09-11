@@ -312,8 +312,6 @@ class HLSRewriter extends Transform {
         `http://${backendUrl}/proxy`
       );
     }
-
-    console.log("[PROXY2 DEBUG] Rewritten M3U8 Content:\n", rewritten);
     this.push(rewritten);
     callback();
   }
