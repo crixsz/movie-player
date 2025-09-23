@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
-import './App.css'; // Assuming you have some basic CSS in App.css
-import Hls from 'hls.js'; // HLS.js for playing HLS streams
-import VideoPlayer from './VideoPlayer'
+import { useState, useRef, useEffect } from "react";
+import "./App.css"; // Assuming you have some basic CSS in App.css
+import Hls from "hls.js"; // HLS.js for playing HLS streams
+import VideoPlayer from "./VideoPlayer";
 
 // Get backend URL with fallback
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-console.log('Backend URL:', BACKEND_URL);
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+console.log("Backend URL:", BACKEND_URL);
 
 // HlsPlayer component to handle video playback with HLS.js and subtitles
 const HlsPlayer = ({ src, subtitles }) => {
@@ -25,7 +25,7 @@ const HlsPlayer = ({ src, subtitles }) => {
         return () => {
           hls.destroy();
         };
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         // Fallback for browsers that natively support HLS (e.g., Safari)
         video.src = src;
       }
@@ -75,34 +75,37 @@ const CustomAlertModal = ({ message, onClose }) => {
 
 function App() {
   // State variables for TMDB ID, movie title, error messages, loading states, and URLs
-  const [tmdbId, setTmdbId] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [tmdbId, setTmdbId] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [subtitleVttUrl, setSubtitleVttUrl] = useState(null);
   const [streamUrl, setStreamUrl] = useState(null);
   const [subtitleResults, setSubtitleResults] = useState([]);
   const [isSearchingSubtitles, setIsSearchingSubtitles] = useState(false);
-  const [contentType, setContentType] = useState('movie'); // State for 'movie' or 'tv'
-  const [season, setSeason] = useState(''); // New state for TV series season
-  const [episode, setEpisode] = useState(''); // New state for TV series episode
+  const [contentType, setContentType] = useState("movie"); // State for 'movie' or 'tv'
+  const [season, setSeason] = useState(""); // New state for TV series season
+  const [episode, setEpisode] = useState(""); // New state for TV series episode
 
   const playerRef = useRef(null);
 
   // Function to convert SRT subtitle format to VTT format
   const srtToVtt = (srtText) => {
-    let vttContent = 'WEBVTT\n\n'; // VTT header
+    let vttContent = "WEBVTT\n\n"; // VTT header
     const cues = srtText.split(/\r?\n\r?\n/); // Split SRT into individual cues
 
-    cues.forEach(cue => {
+    cues.forEach((cue) => {
       if (!cue.trim()) return; // Skip empty cues
       const lines = cue.split(/\r?\n/);
       if (lines.length >= 2) {
         const timeString = lines[1].trim(); // Get time string (e.g., "00:00:00,000 --> 00:00:02,000")
         const textLines = lines.slice(2); // Get subtitle text lines
         // Convert SRT time format (comma for milliseconds) to VTT format (dot for milliseconds)
-        const vttTime = timeString.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
-        vttContent += `${lines[0]}\n${vttTime}\n${textLines.join('\n')}\n\n`; // Reconstruct VTT cue
+        const vttTime = timeString.replace(
+          /(\d{2}:\d{2}:\d{2}),(\d{3})/g,
+          "$1.$2"
+        );
+        vttContent += `${lines[0]}\n${vttTime}\n${textLines.join("\n")}\n\n`; // Reconstruct VTT cue
       }
     });
 
@@ -116,9 +119,9 @@ function App() {
       setSubtitleVttUrl(null);
       return;
     }
-    if (!file.name.endsWith('.srt')) {
-      setErrorMessage('Please upload a valid .srt file.');
-      event.target.value = ''; // Clear file input
+    if (!file.name.endsWith(".srt")) {
+      setErrorMessage("Please upload a valid .srt file.");
+      event.target.value = ""; // Clear file input
       setSubtitleVttUrl(null);
       return;
     }
@@ -127,7 +130,7 @@ function App() {
     reader.onload = () => {
       try {
         const vttText = srtToVtt(reader.result); // Convert SRT to VTT
-        const blob = new Blob([vttText], { type: 'text/vtt' }); // Create a Blob from VTT text
+        const blob = new Blob([vttText], { type: "text/vtt" }); // Create a Blob from VTT text
         const url = URL.createObjectURL(blob); // Create a URL for the Blob
 
         // Revoke previous Blob URL to prevent memory leaks
@@ -136,8 +139,8 @@ function App() {
         setSubtitleVttUrl(url); // Set the new VTT URL
       } catch (err) {
         console.error(err);
-        setErrorMessage('Failed to process subtitle file.');
-        event.target.value = '';
+        setErrorMessage("Failed to process subtitle file.");
+        event.target.value = "";
         setSubtitleVttUrl(null);
       }
     };
@@ -152,28 +155,33 @@ function App() {
       return;
     }
 
-    if (contentType === 'tv' && (!season || !episode)) {
-      setErrorMessage('Please enter both season and episode numbers for TV series.');
+    if (contentType === "tv" && (!season || !episode)) {
+      setErrorMessage(
+        "Please enter both season and episode numbers for TV series."
+      );
       return;
     }
 
     setIsLoading(true);
-    setErrorMessage('');
+    setErrorMessage("");
     setStreamUrl(null);
     setSubtitleVttUrl(null);
     setSubtitleResults([]);
 
     try {
       let res;
-      if (contentType === 'movie') {
+      if (contentType === "movie") {
         res = await fetch(`${BACKEND_URL}/play/${tmdbId}`); // Movie API endpoint
-      } else { // contentType === 'tv'
-        res = await fetch(`${BACKEND_URL}/playtv/${tmdbId}/${season}/${episode}`); // TV Series API endpoint
+      } else {
+        // contentType === 'tv'
+        res = await fetch(
+          `${BACKEND_URL}/playtv/${tmdbId}/${season}/${episode}`
+        ); // TV Series API endpoint
       }
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const data = await res.json();
-      if (!data.stream) throw new Error('No stream URL returned.');
+      if (!data.stream) throw new Error("No stream URL returned.");
 
       setStreamUrl(data.stream);
       setVideoTitle(data.movieName || data.tvName); // Use appropriate name from response
@@ -188,20 +196,24 @@ function App() {
   // Function to search for subtitles using the OpenSubtitles API proxy
   const searchSubtitles = async () => {
     if (!tmdbId) {
-      setErrorMessage(`Please load a ${contentType} first or enter a TMDB ID to search for subtitles.`);
+      setErrorMessage(
+        `Please load a ${contentType} first or enter a TMDB ID to search for subtitles.`
+      );
       return;
     }
 
     setIsSearchingSubtitles(true);
-    setErrorMessage('');
+    setErrorMessage("");
     setSubtitleResults([]);
 
     try {
       let res;
-      if (contentType === 'tv') {
+      if (contentType === "tv") {
         // For TV, use the new /tvsubtitles/search endpoint with season and episode
         if (!season || !episode) {
-          setErrorMessage('Please enter both season and episode numbers for TV series.');
+          setErrorMessage(
+            "Please enter both season and episode numbers for TV series."
+          );
           setIsSearchingSubtitles(false);
           return;
         }
@@ -209,16 +221,20 @@ function App() {
           tmdb_id: tmdbId,
           season_id: season,
           episode_id: episode,
-          language: 'en', // You can make this dynamic if needed
+          language: "en", // You can make this dynamic if needed
         });
-        res = await fetch(`${BACKEND_URL}/tvsubtitles/search?${params.toString()}`);
+        res = await fetch(
+          `${BACKEND_URL}/tvsubtitles/search?${params.toString()}`
+        );
       } else {
         // For movies, use the old endpoint
         const params = new URLSearchParams({
           tmdb_id: tmdbId,
           type: contentType,
         });
-        res = await fetch(`${BACKEND_URL}/subtitles/search?${params.toString()}`);
+        res = await fetch(
+          `${BACKEND_URL}/subtitles/search?${params.toString()}`
+        );
       }
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -231,7 +247,7 @@ function App() {
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage(err.message || 'Failed to search for subtitles.');
+      setErrorMessage(err.message || "Failed to search for subtitles.");
     } finally {
       setIsSearchingSubtitles(false);
     }
@@ -240,7 +256,7 @@ function App() {
   // Function to load a subtitle from the OpenSubtitles API based on fileId
   const loadSubtitleFromApi = async (fileId) => {
     setIsLoading(true); // Use general loading state while fetching subtitle
-    setErrorMessage(''); // Clear previous errors
+    setErrorMessage(""); // Clear previous errors
     setSubtitleVttUrl(null); // Clear previous subtitle
 
     try {
@@ -250,7 +266,7 @@ function App() {
       const srtText = await res.text(); // Get the SRT content
 
       const vttText = srtToVtt(srtText); // Convert SRT to VTT
-      const blob = new Blob([vttText], { type: 'text/vtt' });
+      const blob = new Blob([vttText], { type: "text/vtt" });
       const url = URL.createObjectURL(blob);
 
       if (subtitleVttUrl) URL.revokeObjectURL(subtitleVttUrl);
@@ -258,7 +274,7 @@ function App() {
       setSubtitleResults([]); // Clear search results after a subtitle is loaded
     } catch (err) {
       console.error(err);
-      setErrorMessage(err.message || 'Failed to load subtitle from API.');
+      setErrorMessage(err.message || "Failed to load subtitle from API.");
     } finally {
       setIsLoading(false); // Reset loading state
     }
@@ -278,54 +294,57 @@ function App() {
           Stream Player <span className="ml-2 text-4xl">🎬</span>
         </h1>
         <p className="text-slate-600 mb-6 text-base sm:text-lg">
-          Load content by entering its TMDB ID, search for subtitles, or upload your own SRT file.
+          Load content by entering its TMDB ID, search for subtitles, or upload
+          your own SRT file.
         </p>
 
         {/* Content Type Selection */}
         <div className="mb-6 flex justify-center gap-4">
           <button
             onClick={() => {
-              setContentType('movie');
-              setTmdbId('');
-              setVideoTitle('');
+              setContentType("movie");
+              setTmdbId("");
+              setVideoTitle("");
               setStreamUrl(null);
               setSubtitleVttUrl(null);
               setSubtitleResults([]);
-              setErrorMessage('');
-              setSeason(''); // Clear season/episode when switching
-              setEpisode('');
+              setErrorMessage("");
+              setSeason(""); // Clear season/episode when switching
+              setEpisode("");
             }}
             className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-              contentType === 'movie'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+              contentType === "movie"
+                ? "bg-purple-600 text-white shadow-md"
+                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
             }`}
           >
             Movie 🍿
           </button>
           <button
             onClick={() => {
-              setContentType('tv');
-              setTmdbId('');
-              setVideoTitle('');
+              setContentType("tv");
+              setTmdbId("");
+              setVideoTitle("");
               setStreamUrl(null);
               setSubtitleVttUrl(null);
               setSubtitleResults([]);
-              setErrorMessage('');
-              setSeason(''); // Clear season/episode when switching
-              setEpisode('');
+              setErrorMessage("");
+              setSeason(""); // Clear season/episode when switching
+              setEpisode("");
             }}
             className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-              contentType === 'tv'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+              contentType === "tv"
+                ? "bg-purple-600 text-white shadow-md"
+                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
             }`}
           >
             TV Series 📺
           </button>
         </div>
 
-        <div className='text-slate-600 mb-2 text-xl font-semibold'>{videoTitle}</div>
+        <div className="text-slate-600 mb-2 text-xl font-semibold">
+          {videoTitle}
+        </div>
 
         {/* TMDB ID Input and Load Button */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
@@ -333,10 +352,14 @@ function App() {
             type="text"
             value={tmdbId}
             onChange={(e) => setTmdbId(e.target.value)}
-            placeholder={`Enter TMDB ID for ${contentType} (e.g., ${contentType === 'movie' ? '550 for Fight Club' : '1399 for Game of Thrones'})`}
+            placeholder={`Enter TMDB ID for ${contentType} (e.g., ${
+              contentType === "movie"
+                ? "550 for Fight Club"
+                : "1399 for Game of Thrones"
+            })`}
             className="flex-grow p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
           />
-          {contentType === 'tv' && (
+          {contentType === "tv" && (
             <>
               <input
                 type="number"
@@ -358,46 +381,56 @@ function App() {
           )}
           <button
             onClick={loadContent}
-            disabled={isLoading || (contentType === 'tv' && (!tmdbId || !season || !episode))}
-            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+            disabled={
+              isLoading ||
+              (contentType === "tv" && (!tmdbId || !season || !episode))
+            }
+            className="px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {isLoading ? `Loading ${contentType === 'movie' ? 'Movie' : 'Episode'}...` : `Load ${contentType === 'movie' ? 'Movie' : 'Episode'}`}
+            {isLoading
+              ? `Loading ${contentType === "movie" ? "Movie" : "Episode"}...`
+              : `Load ${contentType === "movie" ? "Movie" : "Episode"}`}
           </button>
-        </div>
-
-        {/* Subtitle Search Button and Upload */}
-        <div className="flex flex-col sm:flex-row-reverse items-stretch sm:items-center gap-3 mb-6">
           <button
             onClick={searchSubtitles}
             disabled={isSearchingSubtitles || isLoading || !tmdbId}
-            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+            className="px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {isSearchingSubtitles ? 'Searching...' : 'Search Subtitles'}
+            {isSearchingSubtitles ? "Searching..." : "Search Subtitles"}
           </button>
-          <label className="flex-grow px-6 py-3 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 cursor-pointer text-base text-center">
-            Upload .srt File
-            <input
-              type="file"
-              accept=".srt"
-              onChange={handleSubtitleUpload}
-              className="hidden"
-            />
-          </label>
         </div>
 
+        {/* Subtitle Upload Section (if needed later) */}
+        <div className="mb-6"></div>
         {/* Subtitle Search Results Display */}
         {subtitleResults.length > 0 && (
           <div className="mb-6 p-4 border border-slate-300 rounded-lg bg-slate-50 max-h-60 overflow-y-auto shadow-inner">
-            <h3 className="text-lg font-semibold text-slate-700 mb-3">Found Subtitles:</h3>
+            <h3 className="text-lg font-semibold text-slate-700 mb-3">
+              Found Subtitles:
+            </h3>
             <ul className="space-y-2">
               {subtitleResults.map((sub) => (
-                <li key={sub.id} className="flex justify-between items-center p-2 bg-white rounded-md shadow-sm border border-slate-200">
+                <li
+                  key={sub.id}
+                  className="flex justify-between items-center p-2 bg-white rounded-md shadow-sm border border-slate-200"
+                >
                   <span className="text-slate-700 text-sm flex-grow mr-4">
-                    <span className="font-medium">{sub.attributes.language}</span> - {sub.attributes.movie_name || sub.attributes.title || 'N/A'}
-                    {sub.attributes.release && <span className="text-slate-500 ml-2 text-xs"> ({sub.attributes.release})</span>}
+                    <span className="font-medium">
+                      {sub.attributes.language}
+                    </span>{" "}
+                    -{" "}
+                    {sub.attributes.movie_name || sub.attributes.title || "N/A"}
+                    {sub.attributes.release && (
+                      <span className="text-slate-500 ml-2 text-xs">
+                        {" "}
+                        ({sub.attributes.release})
+                      </span>
+                    )}
                   </span>
                   <button
-                    onClick={() => loadSubtitleFromApi(sub.attributes.files?.[0]?.file_id)}
+                    onClick={() =>
+                      loadSubtitleFromApi(sub.attributes.files?.[0]?.file_id)
+                    }
                     disabled={isLoading}
                     className="ml-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-800 transition-colors duration-200 disabled:opacity-50"
                   >
@@ -410,14 +443,17 @@ function App() {
         )}
 
         {/* Video Player Section */}
-        {(
+        {
           <div className="w-full bg-black rounded-lg overflow-hidden shadow-md aspect-video">
             <VideoPlayer src={streamUrl} subtitles={subtitleVttUrl} />
           </div>
-        )}
+        }
       </div>
       {/* Error Alert Modal */}
-      <CustomAlertModal message={errorMessage} onClose={() => setErrorMessage('')} />
+      <CustomAlertModal
+        message={errorMessage}
+        onClose={() => setErrorMessage("")}
+      />
     </div>
   );
 }
