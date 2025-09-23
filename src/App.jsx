@@ -357,7 +357,7 @@ function App() {
                 ? "550 for Fight Club"
                 : "1399 for Game of Thrones"
             })`}
-            className="flex-grow p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
+            className="flex-grow p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm"
           />
           {contentType === "tv" && (
             <>
@@ -367,7 +367,7 @@ function App() {
                 onChange={(e) => setSeason(e.target.value)}
                 placeholder="Season (e.g., 1)"
                 min="1"
-                className="w-24 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
+                className="w-20 p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm"
               />
               <input
                 type="number"
@@ -375,7 +375,7 @@ function App() {
                 onChange={(e) => setEpisode(e.target.value)}
                 placeholder="Episode (e.g., 1)"
                 min="1"
-                className="w-24 p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-base"
+                className="w-20 p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm"
               />
             </>
           )}
@@ -385,7 +385,7 @@ function App() {
               isLoading ||
               (contentType === "tv" && (!tmdbId || !season || !episode))
             }
-            className="px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {isLoading
               ? `Loading ${contentType === "movie" ? "Movie" : "Episode"}...`
@@ -394,7 +394,7 @@ function App() {
           <button
             onClick={searchSubtitles}
             disabled={isSearchingSubtitles || isLoading || !tmdbId}
-            className="px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {isSearchingSubtitles ? "Searching..." : "Search Subtitles"}
           </button>
@@ -404,17 +404,17 @@ function App() {
         <div className="mb-6"></div>
         {/* Subtitle Search Results Display */}
         {subtitleResults.length > 0 && (
-          <div className="mb-6 p-4 border border-slate-300 rounded-lg bg-slate-50 max-h-60 overflow-y-auto shadow-inner">
-            <h3 className="text-lg font-semibold text-slate-700 mb-3">
+          <div className="mb-4 p-3 border border-slate-300 rounded-lg bg-slate-50 max-h-48 overflow-y-auto shadow-inner">
+            <h3 className="text-base font-semibold text-slate-700 mb-2">
               Found Subtitles:
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {subtitleResults.map((sub) => (
                 <li
                   key={sub.id}
-                  className="flex justify-between items-center p-2 bg-white rounded-md shadow-sm border border-slate-200"
+                  className="flex justify-between items-center p-1.5 bg-white rounded-md shadow-sm border border-slate-200"
                 >
-                  <span className="text-slate-700 text-sm flex-grow mr-4">
+                  <span className="text-slate-700 text-xs flex-grow mr-3">
                     <span className="font-medium">
                       {sub.attributes.language}
                     </span>{" "}
@@ -432,7 +432,7 @@ function App() {
                       loadSubtitleFromApi(sub.attributes.files?.[0]?.file_id)
                     }
                     disabled={isLoading}
-                    className="ml-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-800 transition-colors duration-200 disabled:opacity-50"
+                    className="ml-3 px-4 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-800 transition-colors duration-200 disabled:opacity-50"
                   >
                     Load
                   </button>
