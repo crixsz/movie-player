@@ -14,11 +14,40 @@ let TARGET;
 const VITE_BACKEND_URL = process.env.VITE_BACKEND_URL;
 const BACKEND_HOST = new URL(VITE_BACKEND_URL).host;
 
+// API Key Authentication Middleware
+const authenticateApiKey = (req, res, next) => {
+  const apiKey =
+    req.headers["x-api-key"] ||
+    req.headers["authorization"]?.replace("Bearer ", "");
+
+  if (!apiKey || apiKey !== process.env.FRONTEND_API_KEY) {
+    console.log(
+      `[AUTH] Unauthorized request from ${req.ip} - Invalid or missing API key`
+    );
+    return res.status(401).json({
+      error: "Unauthorized: Invalid API key",
+      message: "Access denied. Valid API key required.",
+    });
+  }
+
+  console.log(`[AUTH] Authorized request from ${req.ip}`);
+  next();
+};
+
 // CORS Middleware
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Range");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Range, X-API-Key, Authorization"
+  );
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   next();
 });
 
@@ -212,7 +241,7 @@ app.all("/file2/*", (req, res) => {
   res.redirect(proxiedUrl);
 });
 // API Endpoint: Play Movies
-app.get("/play/:id", async (req, res) => {
+app.get("/play/:id", authenticateApiKey, async (req, res) => {
   const movieId = req.params.id;
   const movieName = await getMovieName(movieId);
   const bestStream = await sniffMovieVideoLinks(movieId);
@@ -228,26 +257,33 @@ app.get("/play/:id", async (req, res) => {
 });
 
 // API Endpoint: Play TV Series
-app.get("/playtv/:id/:seasonId/:episodeId", async (req, res) => {
-  const seriesId = req.params.id;
-  const seasonId = req.params.seasonId;
-  const episodeId = req.params.episodeId;
+app.get(
+  "/playtv/:id/:seasonId/:episodeId",
+  authenticateApiKey,
+  async (req, res) => {
+    const seriesId = req.params.id;
+    const seasonId = req.params.seasonId;
+    const episodeId = req.params.episodeId;
 
-  const tvName = await getTVName(seriesId);
-  const bestStreamTV = await sniffTVVideoLinks(seriesId, seasonId, episodeId);
-  console.log(
-    `TV Series ID: ${seriesId}, Season ID: ${seasonId}, Episode ID: ${episodeId}`
-  );
-  if (!bestStreamTV) {
-    return res
-      .status(404)
-      .json({ error: "No HD stream found for this episode" });
+    const tvName = await getTVName(seriesId);
+    const bestStreamTV = await sniffTVVideoLinks(seriesId, seasonId, episodeId);
+    console.log(
+      `TV Series ID: ${seriesId}, Season ID: ${seasonId}, Episode ID: ${episodeId}`
+    );
+    if (!bestStreamTV) {
+      return res
+        .status(404)
+        .json({ error: "No HD stream found for this episode" });
+    }
+
+    // Replace origin with proxy
+    const proxied = bestStreamTV.replace(
+      TARGET,
+      `http://${BACKEND_HOST}/proxy`
+    );
+    res.json({ stream: proxied, tvName: tvName });
   }
-
-  // Replace origin with proxy
-  const proxied = bestStreamTV.replace(TARGET, `http://${BACKEND_HOST}/proxy`);
-  res.json({ stream: proxied, tvName: tvName });
-});
+);
 
 // Rewrite manifest URLs for m3u8
 class HLSRewriter extends Transform {
@@ -367,7 +403,7 @@ app.options("/proxy/*", (req, res) => {
   res.status(204).end();
 });
 // NEW ENDPOINT: Search for subtitles using OpenSubtitles API with tmdb_id
-app.get("/subtitles/search", async (req, res) => {
+app.get("/subtitles/search", authenticateApiKey, async (req, res) => {
   const { tmdb_id, language } = req.query; // tmdb_id and optional language (e.g., 'en')
 
   if (!opensubtitles_api_key) {
@@ -436,7 +472,7 @@ app.get("/subtitles/search", async (req, res) => {
   }
 });
 // NEW ENDPOINT: Search for subtitles using OpenSubtitles API with tmdb_id, season_id and episode_id
-app.get("/tvsubtitles/search", async (req, res) => {
+app.get("/tvsubtitles/search", authenticateApiKey, async (req, res) => {
   const { tmdb_id, season_id, episode_id, language } = req.query; // tmdb_id, season_id, episode_id and optional language (e.g., 'en')
 
   if (!opensubtitles_api_key) {
@@ -507,7 +543,7 @@ app.get("/tvsubtitles/search", async (req, res) => {
   }
 });
 // NEW ENDPOINT: Download a specific subtitle file from OpenSubtitles
-app.get("/subtitles/download/:fileId", async (req, res) => {
+app.get("/subtitles/download/:fileId", authenticateApiKey, async (req, res) => {
   const { fileId } = req.params;
 
   if (!opensubtitles_api_key) {

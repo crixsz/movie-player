@@ -5,7 +5,14 @@ import VideoPlayer from "./VideoPlayer";
 
 // Get backend URL with fallback
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const API_KEY = import.meta.env.VITE_API_KEY;
 console.log("Backend URL:", BACKEND_URL);
+
+// Helper function to get headers with API key
+const getAuthHeaders = () => ({
+  "X-API-Key": API_KEY,
+  "Content-Type": "application/json",
+});
 
 // HlsPlayer component to handle video playback with HLS.js and subtitles
 const HlsPlayer = ({ src, subtitles }) => {
@@ -171,11 +178,16 @@ function App() {
     try {
       let res;
       if (contentType === "movie") {
-        res = await fetch(`${BACKEND_URL}/play/${tmdbId}`); // Movie API endpoint
+        res = await fetch(`${BACKEND_URL}/play/${tmdbId}`, {
+          headers: getAuthHeaders(),
+        }); // Movie API endpoint
       } else {
         // contentType === 'tv'
         res = await fetch(
-          `${BACKEND_URL}/playtv/${tmdbId}/${season}/${episode}`
+          `${BACKEND_URL}/playtv/${tmdbId}/${season}/${episode}`,
+          {
+            headers: getAuthHeaders(),
+          }
         ); // TV Series API endpoint
       }
 
@@ -224,7 +236,10 @@ function App() {
           language: "en", // You can make this dynamic if needed
         });
         res = await fetch(
-          `${BACKEND_URL}/tvsubtitles/search?${params.toString()}`
+          `${BACKEND_URL}/tvsubtitles/search?${params.toString()}`,
+          {
+            headers: getAuthHeaders(),
+          }
         );
       } else {
         // For movies, use the old endpoint
@@ -233,7 +248,10 @@ function App() {
           type: contentType,
         });
         res = await fetch(
-          `${BACKEND_URL}/subtitles/search?${params.toString()}`
+          `${BACKEND_URL}/subtitles/search?${params.toString()}`,
+          {
+            headers: getAuthHeaders(),
+          }
         );
       }
 
@@ -261,7 +279,9 @@ function App() {
 
     try {
       // Call the backend proxy to download the subtitle
-      const res = await fetch(`${BACKEND_URL}/subtitles/download/${fileId}`);
+      const res = await fetch(`${BACKEND_URL}/subtitles/download/${fileId}`, {
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const srtText = await res.text(); // Get the SRT content
 
