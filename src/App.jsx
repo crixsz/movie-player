@@ -332,11 +332,10 @@ function App() {
               setSeason(""); // Clear season/episode when switching
               setEpisode("");
             }}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-              contentType === "movie"
+            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${contentType === "movie"
                 ? "bg-purple-600 text-white shadow-md"
                 : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-            }`}
+              }`}
           >
             Movie 🍿
           </button>
@@ -352,11 +351,10 @@ function App() {
               setSeason(""); // Clear season/episode when switching
               setEpisode("");
             }}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-              contentType === "tv"
+            className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${contentType === "tv"
                 ? "bg-purple-600 text-white shadow-md"
                 : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-            }`}
+              }`}
           >
             TV Series 📺
           </button>
@@ -372,11 +370,10 @@ function App() {
             type="text"
             value={tmdbId}
             onChange={(e) => setTmdbId(e.target.value)}
-            placeholder={`Enter TMDB ID for ${contentType} (e.g., ${
-              contentType === "movie"
+            placeholder={`Enter TMDB ID for ${contentType} (e.g., ${contentType === "movie"
                 ? "550 for Fight Club"
                 : "1399 for Game of Thrones"
-            })`}
+              })`}
             className="flex-grow p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm"
           />
           {contentType === "tv" && (
@@ -465,7 +462,7 @@ function App() {
         {/* Video Player Section */}
         {
           <div className="w-full bg-black rounded-lg overflow-hidden shadow-md aspect-video">
-            <VideoPlayer src={streamUrl} subtitles={subtitleVttUrl} />
+            <VideoPlayer key={streamUrl || "no-source"} src={streamUrl} subtitles={subtitleVttUrl} />
           </div>
         }
       </div>
